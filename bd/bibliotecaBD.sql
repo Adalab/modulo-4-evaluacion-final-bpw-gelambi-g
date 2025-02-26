@@ -11,10 +11,8 @@ CREATE TABLE libros (
     idioma VARCHAR(30)
 );
 SELECT * FROM libros;
+DESCRIBE libros;
 
-ALTER TABLE libros RENAME COLUMN añoPublicación TO añoPublicacion;
-ALTER TABLE libros MODIFY nombreLibro VARCHAR (100);
-ALTER TABLE libros RENAME COLUMN genero TO tematica;
 
 INSERT INTO libros (nombreLibro, nombreAutora, editorial, tematica, añoPublicacion, idioma) VALUES 
 ("Señoras que se empotraron hace mucho", "Cristina Domenech", "Plan B", "Lesbianismo -- historia", "2019", "Español"),
