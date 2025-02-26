@@ -25,4 +25,5 @@ Se han utilitzado las variables de entorno para garantir la connexion cada progr
   - Endpoint POST (/login): para poder iniciar sesión con tu usuario y contraseña
   - Función auth (función middleware)
   - Import de la función auth
+
 Este último proceso está en desarrollo, aún hay fallos.
