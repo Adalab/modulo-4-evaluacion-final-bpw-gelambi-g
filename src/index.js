@@ -2,6 +2,8 @@
 const express = require('express');
 const cors = require('cors');
 const mysql = require("mysql2/promise");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 
 //crear el servidor
 const server = express();
@@ -123,6 +125,8 @@ server.delete("/books/:id", async (req, res) => {
   const {id} = req.params;
   const deleteSQL = "DELETE FROM libros WHERE id = ?"
   const [result] = await connection.query(deleteSQL, [id]);
+  connection.end();
+
   if (result.affectedRows > 0) {
     res.status(200).json({success: true});
   } else {
@@ -140,6 +144,122 @@ server.delete("/books/:id", async (req, res) => {
   })};
 });
 
+//Registro usuaria
+server.post("/register", async (req, res) => {
+  try {
+  const connection = await connectionBD();
+  const {email, pass} = req.body;
+  const selectEmail = "SELECT email FROM usuarios_db WHERE email = ?";
+  const [emailResult] = await connection.query(selectEmail, [email]);
+  connection.end();
+
+
+  if(emailResult.length === 0) {
+    const passwordHased = await bcrypt.hash(pass, 10);
+    const insertUser = "INSERT INTO usuarios_db (email, password) VALUES (?, ?)";
+    const [resultUser] = await connection.query(insertUser, [email, passwordHased]);
+
+    res.status(200).json({
+        "success": true,
+        "id": resultUser.insertId
+    })
+  } else {
+    res.status(400).json({
+      "success": false,
+      "error": error
+    })
+  }
+  } catch (error) {
+    res.status(500).json({
+      success : false,
+      data : error
+    });
+  }
+  
+})
+
+//Inicio de sesión
+server.post("/login", async (req, res) => {
+  try {
+    const connection = await connectionBD();
+    const {email, pass} = req.body;
+
+    const selectSQL = "SELECT email, hashed_pasword, id FROM usuarios_db WHERE email = ?";
+    const [emailResult] = await connection.query(selectSQL, [email]);
+    
+    if(emailResult.length !== 0) {
+      const passDB = emailResult[0].hashed_password;
+      const isSamePassword = await bcrypt.compare(pass, passDB);
+      
+      if(isSamePassword) {
+        const infoToken = {email: emailResult[0].email, id: emailResult[0].id};
+        const token = jwt.sign(infoToken, "pepino", {expiresIn: "2h"});
+
+        res.status(201).json({
+          success: true,
+          token: token
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          message: "Contraseña incorrecta"
+        });
+      }
+    } else {
+      res.status(400).json({
+        success: false,
+        message: "Correo electrónico incorrecto"
+      });
+    }
+    connection.end();
+
+  } catch (error) {
+    res.status(500).json({
+      success : false,
+      message: "No existe usuario con este correo"
+    });
+  }
+});
+
+function auth(req, res, next) {
+  try {
+    const tokenString = req.headers.authorization;
+  
+  if(!tokenString) {
+    res.status(400).json({
+      success: false,
+      message: "No se ha podido autorizar la entrada"
+    }); 
+  } else {
+      try {
+      const token = tokenString.split(" ") [1];
+      const verifyToken = jwt.verify(token, "pepino");
+      req.dataUser = verifyToken;  
+      next();
+      } catch (error) {
+        res.status(400).json({
+          success: false,
+          message: error,
+        });
+      }
+  }
+  } catch (error) {
+    res.status(500).json({
+      success : false,
+      data : error
+    });
+  }
+
+}
+
+//Import de la función auth
+server.use("/login/porfile", auth, (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Has accedido a tu perfil",
+    dataUser: req.dataUser
+  });
+});
 
 //Puerto del navegador
 const apiURL = process.env.URL_SERVER;
