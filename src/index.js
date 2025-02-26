@@ -10,7 +10,6 @@ const server = express();
 // configurar el servidor
 server.use(cors());
 server.use(express.json());
-server.set('view engine', 'ejs');
 require("dotenv").config();
 
 //función de connexión con la BD
@@ -24,15 +23,6 @@ async function connectionBD() {
   connection.connect();
   return connection;
 };
-
-
-const books = [
-  {nombreLibro: 'Señoras que se empotraron hace mucho', nombreAutora: 'Cristina Domenech', editorial: 'Plan B', tematica: 'Lesbianismo -- historia', añoPublicacion: '2019', idioma: 'Español', imagen: 'https://imagessl3.casadellibro.com/a/l/s7/33/9788417001933.webp'},
-  {nombreLibro: 'Corazones perdidos', nombreAutora: 'Celeste Ng', editorial: 'Alba Editorial', tematica: 'Novela distópipca', añoPublicacion: '2022', idioma: 'Español', imagen: 'https://imagessl3.casadellibro.com/a/l/s7/43/9788490659243.webp'},
-  {nombreLibro: 'Canto jo i la muntanya balla', nombreAutora: 'Irene Solà', editorial: 'Editorial Anagrama', tematica: 'Lesbianismo -- historia', añoPublicacion: '2019', idioma: 'Catalán', imagen: 'https://imagessl9.casadellibro.com/a/l/s7/89/9788433915689.webp'},
-  {nombreLibro: 'Manifest SCUM', nombreAutora: 'Valerie Solanas', editorial: 'Virus Editorial', tematica: 'Manifiesto político -- feminismo radical', añoPublicacion: '2020', idioma: 'Catalán', imagen: 'https://imagessl8.casadellibro.com/a/l/s7/58/9788417870058.webp'},
-  {nombreLibro: 'Cuando te llaman terrorista: una memoria del Black Lives Matter', nombreAutora: 'Patrisse Khan-Cullors, Asha Bandele', editorial: 'Capitán Swing', tematica: 'Historia -- feminismo', añoPublicacion: '2021', idioma: 'Español', imagen: 'https://imagessl6.casadellibro.com/a/l/s7/16/9788412390216.webp'}
-]
 
 
 //ENDPOINTS
@@ -66,20 +56,19 @@ server.post("/books/newBook", async (req, res) => {
       })
     };
 
-    const insertSQL = "INSERT INTO libros (nombreLibro, nombreAutora, editorial, tematica, añoPublicacion, idioma, imagen) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    const insertSQL = "INSERT INTO libros (nombreLibroLibro, nombreAutora, editorial, tematica, publicacion, idioma, imagen) VALUES (?, ?, ?, ?, ?, ?, ?)";
     const [resultBook] = await connection.query(insertSQL, [
       newBook.nombreLibro, 
       newBook.nombreAutora, 
       newBook.editorial, 
       newBook.tematica, 
-      newBook.añoPublicacion, 
+      newBook.publicacion, 
       newBook.idioma,
       newBook.imagen,
     ]);
     connection.end();
 
     if(resultBook.insertId) {
-      books.push(newBook);
       res.status(201).json({
         success: true,
         id: resultBook.insertId,
@@ -93,6 +82,7 @@ server.post("/books/newBook", async (req, res) => {
       connection.end();
 
   } catch (error) {
+    console.log(error)
     res.status(500).json({
       success : false,
       data : error
@@ -105,9 +95,9 @@ server.put("/books/:id", async (req, res) => {
   try {
   const connection = await connectionBD();
   const {id} = req.params;
-  const {nombre, autora, editorial, tematica, año, idioma, imagen} = req.body;
-  const updateSQL = "UPDATE libros SET nombreLibro = ?, nombreAutora = ?, editorial = ?, tematica = ?, añoPublicacion = ?, idioma = ?, imagen = ? WHERE id = ?"
-  const [result] = await connection.query(updateSQL, [nombre, autora, editorial, tematica, año, idioma, imagen, id]);
+  const {nombreLibro, nombreAutora, editorial, tematica, publicacion, idioma, imagen} = req.body;
+  const updateSQL = "UPDATE libros SET nombreLibro = ?, nombreAutora = ?, editorial = ?, tematica = ?, publicacion = ?, idioma = ?, imagen = ? WHERE id = ?"
+  const [result] = await connection.query(updateSQL, [nombreLibro, nombreAutora, editorial, tematica, publicacion, idioma, imagen, id]);
 
   if(result.affectedRows > 0) {
     res.status(200).json({success: true});
