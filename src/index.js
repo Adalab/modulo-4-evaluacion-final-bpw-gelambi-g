@@ -28,7 +28,6 @@ async function connectionBD() {
 
 
 //ENDPOINTS
-
 //Lista de todos los libros
 server.get('/books', async (req, res) => {
   try {
@@ -267,7 +266,3 @@ const PORT = process.env.PORT;
 server.listen(PORT, () => {
   console.log(`Server is running ${apiURL}`);
 });
-
-
-//servidor estaticos
-server.use(express.static("./css"));
